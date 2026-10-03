@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Coralcrafter – Editor de Partituras para Coro</title>
+
+  <!-- ── PWA: manifest e tema ───────────────────────────────────── -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e0553f">
+  <meta name="application-name" content="Coralcrafter">
+  <meta name="description" content="Editor e criador de partituras/tablaturas para coros e vozes humanas, com sintetizador vocal formântico, exportação WAV, MIDI, TXT e PNG.">
+
+  <!-- ── PWA: iOS / Safari ──────────────────────────────────────── -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Coralcrafter">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
+
+  <!-- ── Favicon ────────────────────────────────────────────────── -->
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ───────── Ícones (sprite SVG, sem dependências externas) ───────── -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 4 20 12 6 20 6 4" fill="currentColor"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></symbol>
+    <symbol id="i-loop" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></symbol>
+    <symbol id="i-filenew" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-skipback" viewBox="0 0 24 24"><polygon points="19 20 9 12 19 4 19 20" fill="currentColor"/><path d="M5 19V5"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></symbol>
+    <symbol id="i-zoomin" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8v6M8 11h6"/></symbol>
+    <symbol id="i-zoomout" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M8 11h6"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-follow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/><path d="M3 5v14"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- ───────── Cabeçalho ───────── -->
+  <header class="topbar">
+    <button id="btnMenu" class="icon-btn only-mobile" aria-label="Abrir painel de vozes e projeto" title="Vozes e projeto">
+      <svg class="i"><use href="#i-menu"/></svg>
+    </button>
+    <div class="brand">
+      <img class="logo" src="icon-96x96.png" alt="" width="34" height="34">
+      <div class="brand-text">
+        <h1>Coralcrafter</h1>
+        <span class="tagline">Editor de partituras para coro</span>
+      </div>
+    </div>
+    <div class="projname" title="Nome do projeto">
+      <span id="saveDot" class="dot" aria-hidden="true"></span>
+      <input id="projName" type="text" maxlength="80" spellcheck="false" aria-label="Nome do projeto" value="Novo projeto">
+    </div>
+    <div class="top-actions">
+      <button id="btnNew" class="btn ghost" title="Novo projeto"><svg class="i"><use href="#i-filenew"/></svg><span class="lbl">Novo</span></button>
+      <button id="btnLibrary" class="btn ghost" title="Abrir / biblioteca"><svg class="i"><use href="#i-folder"/></svg><span class="lbl">Abrir</span></button>
+      <button id="btnSave" class="btn primary" title="Salvar no navegador (Ctrl+S)"><svg class="i"><use href="#i-save"/></svg><span class="lbl">Salvar</span></button>
+      <button id="btnExport" class="btn ghost" title="Exportar WAV, MIDI, TXT, PNG ou JSON"><svg class="i"><use href="#i-download"/></svg><span class="lbl">Exportar</span></button>
+      <button id="btnInstall" class="btn ok hidden" title="Instalar o app"><svg class="i"><use href="#i-download"/></svg><span class="lbl">Instalar</span></button>
+      <button id="btnHelp" class="icon-btn" aria-label="Ajuda e atalhos" title="Ajuda e atalhos"><svg class="i"><use href="#i-help"/></svg></button>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- ───────── Painel lateral (vozes e projeto) ───────── -->
+    <aside id="sidebar" class="sidebar" aria-label="Vozes e projeto">
+      <div class="side-head only-mobile">
+        <strong>Vozes e projeto</strong>
+        <button id="btnSideClose" class="icon-btn" aria-label="Fechar painel"><svg class="i"><use href="#i-x"/></svg></button>
+      </div>
+
+      <section class="card">
+        <h3>Vozes</h3>
+        <p class="hint">Toque numa voz para escrever com ela. Cada voz tem o seu timbre e a sua vogal.</p>
+        <div id="voiceList" class="voice-list"></div>
+      </section>
+
+      <section class="card">
+        <h3>Projeto</h3>
+        <label class="row-field"><span>Fórmula de compasso</span>
+          <select id="selBeats" aria-label="Tempos por compasso">
+            <option value="2">2/4</option><option value="3">3/4</option><option value="4">4/4</option>
+            <option value="5">5/4</option><option value="6">6/4</option><option value="7">7/4</option>
+          </select>
+        </label>
+        <div class="row-field"><span>Compassos</span>
+          <div class="stepper">
+            <button id="btnMeasMinus" class="sq" aria-label="Remover compasso"><svg class="i"><use href="#i-minus"/></svg></button>
+            <output id="measCount">4</output>
+            <button id="btnMeasPlus" class="sq" aria-label="Adicionar compasso"><svg class="i"><use href="#i-plus"/></svg></button>
+            <button id="btnMeas4" class="sq wide" title="Adicionar 4 compassos">+4</button>
+          </div>
+        </div>
+        <label class="row-field"><span>Encaixe do clique</span>
+          <select id="selSnap" aria-label="Resolução do encaixe">
+            <option value="4">1/4 (semínima)</option>
+            <option value="2">1/8 (colcheia)</option>
+            <option value="1">1/16 (semicolcheia)</option>
+          </select>
+        </label>
+        <label class="row-field"><span>Nomes das notas</span>
+          <select id="selNotation" aria-label="Notação">
+            <option value="do">Dó Ré Mi</option>
+            <option value="abc">C D E</option>
+          </select>
+        </label>
+        <label class="row-field"><span>Timbre das vozes</span>
+          <select id="selTimbre" aria-label="Timbre das vozes">
+            <option value="coral">Coral real</option>
+            <option value="synth">Sintético</option>
+          </select>
+        </label>
+        <p class="hint" id="timbreStatus" style="margin:0 0 6px"></p>
+        <label class="row-field"><span>Reverberação</span>
+          <input id="rngReverb" type="range" min="0" max="1" step="0.01" aria-label="Reverberação">
+        </label>
+      </section>
+
+      <section class="card">
+        <h3>Exemplos</h3>
+        <div id="demoList" class="demo-list"></div>
+      </section>
+
+      <section class="card small">
+        <h3>Sobre o som</h3>
+        <p class="hint">O timbre padrão usa <strong>gravações de coro</strong> (Choir Aahs e Voice Oohs, do soundfont FluidR3_GM, licença CC BY 3.0) tocadas pela Web Audio API; as vogais Eh, Ee e Oo são moldadas por filtros. O modo <strong>Sintético</strong> gera as vozes por formantes, sem arquivos. Tudo funciona offline.</p>
+      </section>
+    </aside>
+    <div id="sideBackdrop" class="side-backdrop"></div>
+
+    <!-- ───────── Área principal ───────── -->
+    <main class="stage">
+
+      <div class="toolbar" id="toolbar" role="toolbar" aria-label="Ferramentas de edição">
+        <div class="group" role="group" aria-label="Ferramenta">
+          <button class="tool on" data-tool="note" title="Nota: clique para inserir; arraste para mover; borda direita redimensiona (Q)"><svg class="i"><use href="#i-pencil"/></svg><span class="lbl">Nota</span></button>
+          <button class="tool" data-tool="chord" title="Acorde coral: um clique cria as 4 vozes (W)"><svg class="i"><use href="#i-layers"/></svg><span class="lbl">Acorde</span></button>
+          <button class="tool" data-tool="erase" title="Borracha: clique numa nota para apagar (E)"><svg class="i"><use href="#i-eraser"/></svg><span class="lbl">Apagar</span></button>
+        </div>
+
+        <select id="selChord" class="chord-sel hidden" aria-label="Tipo de acorde">
+          <option value="maj">Maior</option>
+          <option value="min">Menor</option>
+          <option value="dom7">Dominante (7)</option>
+          <option value="maj7">Maior com 7M</option>
+          <option value="min7">Menor com 7</option>
+          <option value="dim">Diminuto</option>
+          <option value="aug">Aumentado</option>
+          <option value="sus4">Sus4</option>
+        </select>
+
+        <div class="group durs" role="group" aria-label="Duração das notas" id="durGroup">
+          <button class="dur" data-d="1" title="Semicolcheia (1/16)">1/16</button>
+          <button class="dur" data-d="2" title="Colcheia (1/8)">1/8</button>
+          <button class="dur on" data-d="4" title="Semínima (1/4)">1/4</button>
+          <button class="dur" data-d="6" title="Semínima pontuada">1/4.</button>
+          <button class="dur" data-d="8" title="Mínima (1/2)">1/2</button>
+          <button class="dur" data-d="12" title="Mínima pontuada">1/2.</button>
+          <button class="dur" data-d="16" title="Semibreve (1)">1</button>
+        </div>
+
+        <div class="group" role="group" aria-label="Histórico e zoom">
+          <button id="btnUndo" class="sq" title="Desfazer (Ctrl+Z)" aria-label="Desfazer"><svg class="i"><use href="#i-undo"/></svg></button>
+          <button id="btnRedo" class="sq" title="Refazer (Ctrl+Y)" aria-label="Refazer"><svg class="i"><use href="#i-redo"/></svg></button>
+          <button id="btnZoomOut" class="sq" title="Reduzir zoom" aria-label="Reduzir zoom"><svg class="i"><use href="#i-zoomout"/></svg></button>
+          <button id="btnZoomIn" class="sq" title="Aumentar zoom" aria-label="Aumentar zoom"><svg class="i"><use href="#i-zoomin"/></svg></button>
+        </div>
+      </div>
+
+      <div class="selbar hidden" id="selbar" role="toolbar" aria-label="Notas selecionadas">
+        <strong id="selCount">1 nota</strong>
+        <div class="group" role="group" aria-label="Mudar de voz" id="selVoices"></div>
+        <select id="selVowel" aria-label="Vogal da nota selecionada">
+          <option value="">Vogal da voz</option>
+          <option value="A">Ah</option><option value="E">Eh</option><option value="I">Ee</option>
+          <option value="O">Oh</option><option value="U">Oo</option>
+        </select>
+        <div class="group" role="group" aria-label="Transpor">
+          <button class="sq wide" data-transpose="-12" title="Uma oitava abaixo (Shift+↓)">−8ª</button>
+          <button class="sq wide" data-transpose="-1" title="Um semitom abaixo (↓)">−½</button>
+          <button class="sq wide" data-transpose="1" title="Um semitom acima (↑)">+½</button>
+          <button class="sq wide" data-transpose="12" title="Uma oitava acima (Shift+↑)">+8ª</button>
+        </div>
+        <button id="btnDup" class="btn ghost" title="Duplicar para a frente (Ctrl+D)"><svg class="i"><use href="#i-copy"/></svg><span class="lbl">Duplicar</span></button>
+        <button id="btnDel" class="btn danger" title="Apagar (Delete)"><svg class="i"><use href="#i-trash"/></svg><span class="lbl">Apagar</span></button>
+      </div>
+
+      <div id="roll" class="roll" tabindex="-1" aria-label="Grade melódica"></div>
+    </main>
+  </div>
+
+  <!-- ───────── Transporte ───────── -->
+  <footer class="transport" role="group" aria-label="Controles de reprodução">
+    <div class="t-main">
+      <button id="btnToStart" class="sq big" title="Voltar ao início (Home)" aria-label="Voltar ao início"><svg class="i"><use href="#i-skipback"/></svg></button>
+      <button id="btnPlay" class="play" title="Tocar / pausar (Espaço)" aria-label="Tocar"><svg class="i"><use href="#i-play"/></svg></button>
+      <button id="btnStop" class="sq big" title="Parar" aria-label="Parar"><svg class="i"><use href="#i-stop"/></svg></button>
+      <button id="btnLoop" class="sq big toggle" aria-pressed="true" title="Repetir em loop" aria-label="Repetir em loop"><svg class="i"><use href="#i-loop"/></svg></button>
+      <button id="btnFollow" class="sq big toggle" aria-pressed="true" title="Acompanhar o cursor" aria-label="Acompanhar o cursor"><svg class="i"><use href="#i-follow"/></svg></button>
+    </div>
+    <div class="t-pos" aria-live="off"><span class="t-label">Compasso</span><output id="posLabel">1 · 1</output></div>
+    <div class="t-bpm">
+      <span class="t-label">BPM</span>
+      <button id="bpmMinus" class="sq" aria-label="Diminuir andamento"><svg class="i"><use href="#i-minus"/></svg></button>
+      <input id="bpmInput" type="number" min="30" max="240" value="84" inputmode="numeric" aria-label="Andamento em BPM">
+      <button id="bpmPlus" class="sq" aria-label="Aumentar andamento"><svg class="i"><use href="#i-plus"/></svg></button>
+    </div>
+    <label class="t-vol">
+      <svg class="i"><use href="#i-volume"/></svg>
+      <input id="rngMaster" type="range" min="0" max="1" step="0.01" aria-label="Volume geral">
+    </label>
+  </footer>
+</div>
+
+<!-- ───────── Diálogos ───────── -->
+<dialog id="dlgLibrary" class="dlg">
+  <form method="dialog" class="dlg-head"><h2>Meus projetos</h2><button class="icon-btn" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></form>
+  <div class="dlg-body">
+    <div id="libList" class="lib-list"></div>
+    <div class="dlg-actions">
+      <label class="btn ghost file-btn"><svg class="i"><use href="#i-folder"/></svg> Importar arquivo .json
+        <input id="fileImport" type="file" accept=".json,application/json" hidden>
+      </label>
+    </div>
+    <p class="hint">Os projetos ficam salvos neste navegador (LocalStorage). Use <strong>Exportar → JSON</strong> para guardar uma cópia em arquivo ou levar para outro aparelho.</p>
+  </div>
+</dialog>
+
+<dialog id="dlgExport" class="dlg">
+  <form method="dialog" class="dlg-head"><h2>Exportar</h2><button class="icon-btn" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></form>
+  <div class="dlg-body">
+    <div class="fmt-grid" role="radiogroup" aria-label="Formato">
+      <label class="fmt"><input type="radio" name="fmt" value="wav" checked><span><b>WAV</b><small>Áudio com as vozes sintetizadas</small></span></label>
+      <label class="fmt"><input type="radio" name="fmt" value="mid"><span><b>MIDI</b><small>Uma pista por voz (Choir Aahs / Voice Oohs)</small></span></label>
+      <label class="fmt"><input type="radio" name="fmt" value="txt"><span><b>TXT</b><small>Tablatura em texto, por voz</small></span></label>
+      <label class="fmt"><input type="radio" name="fmt" value="png"><span><b>PNG</b><small>Imagem da partitura em grade</small></span></label>
+      <label class="fmt"><input type="radio" name="fmt" value="json"><span><b>JSON</b><small>Projeto completo (para importar depois)</small></span></label>
+    </div>
+    <fieldset class="range-box" id="rangeBox">
+      <legend>Trecho</legend>
+      <label class="inline"><input type="radio" name="rng" value="all" checked> Peça inteira</label>
+      <label class="inline"><input type="radio" name="rng" value="part"> Compassos
+        <input id="expFrom" type="number" min="1" value="1" aria-label="Do compasso"> a
+        <input id="expTo" type="number" min="1" value="4" aria-label="Até o compasso">
+      </label>
+    </fieldset>
+    <p class="hint" id="expHint">WAV e MIDI respeitam o mudo/solo das vozes: ative o solo numa voz para exportar uma faixa-guia de ensaio.</p>
+    <div class="dlg-actions">
+      <button id="btnDoExport" class="btn primary"><svg class="i"><use href="#i-download"/></svg> Exportar</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlgHelp" class="dlg">
+  <form method="dialog" class="dlg-head"><h2>Como usar</h2><button class="icon-btn" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></form>
+  <div class="dlg-body help">
+    <ol>
+      <li>Escolha uma <b>voz</b> (S, A, T, B) no painel e uma <b>duração</b> na barra de ferramentas.</li>
+      <li><b>Clique/toque</b> na grade para inserir uma nota. A faixa colorida mostra a tessitura confortável da voz; fora dela a nota fica tracejada.</li>
+      <li><b>Arraste</b> a nota para mover (tempo e altura) ou puxe a <b>borda direita</b> para mudar a duração.</li>
+      <li>Com a ferramenta <b>Acorde</b>, um clique cria um acorde para as 4 vozes, já distribuído dentro da tessitura de cada uma.</li>
+      <li>Aperte <b>Espaço</b> para tocar. O BPM, o loop e as notas podem ser alterados durante a reprodução.</li>
+    </ol>
+    <h4>Atalhos</h4>
+    <table class="keys">
+      <tr><td><kbd>Espaço</kbd></td><td>Tocar / pausar</td><td><kbd>Home</kbd></td><td>Voltar ao início</td></tr>
+      <tr><td><kbd>1</kbd>–<kbd>4</kbd></td><td>Escolher voz S/A/T/B</td><td><kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd></td><td>Nota / Acorde / Apagar</td></tr>
+      <tr><td><kbd>Del</kbd></td><td>Apagar selecionadas</td><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Duplicar</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Mover no tempo</td><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>Transpor (Shift = oitava)</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd>/<kbd>Y</kbd></td><td>Desfazer / refazer</td><td><kbd>Ctrl</kbd>+<kbd>A</kbd></td><td>Selecionar tudo</td></tr>
+      <tr><td><kbd>Shift</kbd>+clique</td><td>Somar à seleção</td><td><kbd>Ctrl</kbd>+<kbd>S</kbd></td><td>Salvar</td></tr>
+    </table>
+    <p class="hint">Dica: clique na régua de compassos para posicionar o cursor de reprodução. Clique numa tecla à esquerda para ouvir a altura.</p>
+  </div>
+</dialog>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="audio.js"></script>
+<script src="io.js"></script>
+<script src="demos.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
