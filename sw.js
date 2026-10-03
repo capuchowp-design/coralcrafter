@@ -1,7 +1,7 @@
 // Coralcrafter – Service Worker
 // Todo o app é local (sem CDN), então funciona 100% offline depois da primeira visita.
 // Mude a versão abaixo para forçar a atualização do cache.
-const CACHE_NAME = 'coralcrafter-v3';
+const CACHE_NAME = 'coralcrafter-v4';
 
 const PRECACHE_URLS = [
   './',
@@ -25,7 +25,7 @@ const PRECACHE_URLS = [
   './apple-touch-icon.png',
   './favicon-32x32.png'
 ];
-PRECACHE_URLS.push('./coral-voices.bin'); // amostras de coro (98 MP3 empacotados)
+PRECACHE_URLS.push('./coral-voices.bin'); // amostras de coro (122 MP3 empacotados)
 
 // ── Install: pré-cache dos arquivos locais ───────────────────────────────────
 self.addEventListener('install', (event) => {

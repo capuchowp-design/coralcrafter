@@ -120,12 +120,12 @@
   }
 
   /* ───────────────────────── Amostras de coro (vozes humanas reais) ─────────────────────────
-   * Banco "FluidR3_GM" (Choir Aahs e Voice Oohs), uma amostra por semitom (Dó2–Dó6).
+   * Banco "FluidR3_GM" (Choir Aahs e Voice Oohs), uma amostra por semitom (Dó1–Dó6).
    * Cada amostra é preparada para sustentar: o trecho final recebe crossfade com o
    * trecho anterior ao ponto de loop, e a notas longas ficam contínuas, sem "pulos".
    */
-  const SAMPLE_PACK = 'coral-voices.bin'; // pacote único: 98 MP3 (Aahs e Oohs, Dó2–Dó6)
-  const SAMPLE_MIN = 36, SAMPLE_MAX = 84;
+  const SAMPLE_PACK = 'coral-voices.bin'; // pacote único: 122 MP3 (Aahs e Oohs, Dó1–Dó6)
+  const SAMPLE_MIN = 24, SAMPLE_MAX = 84;
   const VOWEL_INSTR = { A: 'ah', E: 'ah', I: 'oh', O: 'oh', U: 'oh' };
   // moldagem leve de vogal sobre as amostras: [tipo, freq, ganho dB, Q]
   const VOWEL_EQ = {

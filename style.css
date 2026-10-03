@@ -330,7 +330,6 @@ kbd { background: var(--panel3); border: 1px solid #38405d; border-bottom-width:
 }
 @media (max-width: 420px) {
   .brand-text { display: none; }
-  #btnNew { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }

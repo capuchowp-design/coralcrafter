@@ -6,7 +6,7 @@
 
   /* ───────────────────────── Constantes e estado ───────────────────────── */
 
-  const MIN_MIDI = 36;           // C2
+  const MIN_MIDI = 24;           // C1
   const MAX_MIDI = 84;           // C6
   const NROWS = MAX_MIDI - MIN_MIDI + 1;
   const COARSE = window.matchMedia && matchMedia('(pointer: coarse)').matches;
@@ -999,6 +999,7 @@
 
     // topo
     $('#btnNew').addEventListener('click', newProject);
+    $('#btnNewSide').addEventListener('click', newProject);
     $('#btnSave').addEventListener('click', saveProject);
     $('#btnLibrary').addEventListener('click', () => { renderLibrary(); $('#dlgLibrary').showModal(); });
     $('#btnExport').addEventListener('click', () => {

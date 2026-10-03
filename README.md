@@ -46,12 +46,12 @@ Para publicar no **GitHub Pages**: envie estes arquivos para o repositório e at
 | `audio.js` | Banco de amostras de coro, sintetizador formântico, agendador (lookahead), render offline e WAV |
 | `io.js` | Projeto, LocalStorage, exportação MIDI/TXT/PNG/JSON |
 | `demos.js` | Projetos de exemplo |
-| `coral-voices.bin` | Pacote único com 98 amostras MP3 de coro (Choir Aahs e Voice Oohs, Dó2–Dó6), ~2,4 MB |
+| `coral-voices.bin` | Pacote único com 122 amostras MP3 de coro (Choir Aahs e Voice Oohs, Dó1–Dó6), ~3 MB |
 | `manifest.json`, `sw.js`, `*.png` | PWA (manifest, cache offline, ícones) |
 
 ## Como o som é feito
 
-**Coral real (padrão).** Cada nota toca uma gravação de coro da altura exata (uma amostra por semitom, Dó2–Dó6). Como a amostra dura ~3 s, o trecho final recebe crossfade para o app sustentar notas de qualquer duração sem cortes ou cliques. Duas camadas levemente desafinadas dão o efeito de várias pessoas cantando juntas. *Ah* e *Eh* usam o *Choir Aahs*; *Oh*, *Oo* e *Ee* usam o *Voice Oohs*, e *Eh*, *Ee* e *Oo* são moldadas por filtros de formante. As amostras ficam num único arquivo, `coral-voices.bin` (todos os arquivos do projeto ficam na raiz, sem pastas), e são pré-carregadas no cache do PWA.
+**Coral real (padrão).** Cada nota toca uma gravação de coro da altura exata (uma amostra por semitom, Dó1–Dó6). Como a amostra dura ~3 s, o trecho final recebe crossfade para o app sustentar notas de qualquer duração sem cortes ou cliques. Duas camadas levemente desafinadas dão o efeito de várias pessoas cantando juntas. *Ah* e *Eh* usam o *Choir Aahs*; *Oh*, *Oo* e *Ee* usam o *Voice Oohs*, e *Eh*, *Ee* e *Oo* são moldadas por filtros de formante. As amostras ficam num único arquivo, `coral-voices.bin` (todos os arquivos do projeto ficam na raiz, sem pastas), e são pré-carregadas no cache do PWA.
 
 **Sintético.** Três osciladores com fonte de espectro glotal, vibrato e ruído de respiração, passando por 5 filtros passa-banda com os formantes de cada vogal e tipo de voz. É leve e não usa arquivos de áudio. Também é o reserva automático se as amostras não carregarem.
 
@@ -68,5 +68,5 @@ As amostras de coro vêm do soundfont **FluidR3_GM** (Frank Wen), convertidas pa
 ## Limitações
 
 - O compasso usa a semínima como tempo (2/4 a 7/4); não há compassos compostos tipo 6/8.
-- A grade vai de Dó2 a Dó6 e a peça tem no máximo 256 compassos.
+- A grade vai de Dó1 a Dó6 e a peça tem no máximo 256 compassos.
 - A exportação MIDI não traz letra nem dinâmica.
