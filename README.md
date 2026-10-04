@@ -51,7 +51,7 @@ Para publicar no **GitHub Pages**: envie estes arquivos para o repositório e at
 
 ## Como o som é feito
 
-**Coral real (padrão).** Cada nota toca uma gravação de coro da altura exata (uma amostra por semitom, Dó1–Dó6). Como a amostra dura ~3 s, o trecho final recebe crossfade para o app sustentar notas de qualquer duração sem cortes ou cliques. Duas camadas levemente desafinadas dão o efeito de várias pessoas cantando juntas. *Ah* e *Eh* usam o *Choir Aahs*; *Oh*, *Oo* e *Ee* usam o *Voice Oohs*, e *Eh*, *Ee* e *Oo* são moldadas por filtros de formante. As amostras ficam num único arquivo, `coral-voices.bin` (todos os arquivos do projeto ficam na raiz, sem pastas), e são pré-carregadas no cache do PWA.
+**Coral real (padrão).** Cada nota toca uma gravação de coro da altura exata (uma amostra por semitom, Dó1–Dó6). Como a amostra dura ~3 s, o trecho final recebe crossfade para o app sustentar notas de qualquer duração sem cortes ou cliques. As notas ligam umas às outras com crossfade de potência constante (sem "buracos" nem "socos" nas trocas) e usam uma camada única, para não haver batimento entre cópias da mesma gravação. *Ah* e *Eh* usam o *Choir Aahs*; *Oh*, *Oo* e *Ee* usam o *Voice Oohs*, e *Eh*, *Ee* e *Oo* são moldadas por filtros de formante. As amostras ficam num único arquivo, `coral-voices.bin` (todos os arquivos do projeto ficam na raiz, sem pastas), e são pré-carregadas no cache do PWA.
 
 **Sintético.** Três osciladores com fonte de espectro glotal, vibrato e ruído de respiração, passando por 5 filtros passa-banda com os formantes de cada vogal e tipo de voz. É leve e não usa arquivos de áudio. Também é o reserva automático se as amostras não carregarem.
 

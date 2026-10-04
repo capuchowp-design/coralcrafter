@@ -213,6 +213,32 @@
     },
   };
 
+  /* Envelope de crossfade com potência constante.
+   * A entrada (sen) e a saída (cos) são centradas nos instantes de início e fim da nota:
+   * quando uma nota termina exatamente onde a próxima começa (mesma voz), as duas curvas
+   * se cruzam em sen²+cos²=1, então o volume não afunda ("oco") nem dá pico ("soco").
+   */
+  const FADE_MAX = 0.12;
+  function applyEnvelope(param, t, dur, peak, now) {
+    const X = Math.min(FADE_MAX, dur * 0.4);
+    const half = X / 2;
+    const N = 32;
+    const up = new Float32Array(N), down = new Float32Array(N);
+    for (let i = 0; i < N; i++) {
+      const x = i / (N - 1);
+      up[i] = peak * Math.sin(x * Math.PI / 2);
+      down[i] = peak * Math.cos(x * Math.PI / 2);
+    }
+    const s = Math.max(t - half, now);
+    const upDur = Math.max(0.012, t + half - s);
+    param.setValueAtTime(0, s);
+    param.setValueCurveAtTime(up, s, upDur);
+    param.setValueAtTime(peak, s + upDur + 0.0005);
+    param.setValueCurveAtTime(down, t + dur - half, X);
+    param.setValueAtTime(0, t + dur + half + 0.001);
+    return { start: s, stopAt: t + dur + half + 0.06 };
+  }
+
   /* ───────────────────────── Engine ───────────────────────── */
 
   function makeImpulse(ctx, seconds, decay, rand) {
@@ -332,7 +358,6 @@
       const dur = Math.max(0.08, o.dur);
       const vel = o.vel == null ? 0.9 : o.vel;
       const rnd = this.rand;
-      const end = t + dur;
       const nodes = [];
 
       const out = ctx.createGain();
@@ -349,28 +374,24 @@
       }
       head = tail;
 
-      // duas camadas levemente desafinadas = mais "gente cantando junto"
-      [[-5, 1.0], [6, 0.7]].forEach(([cents, lv], k) => {
-        const src = ctx.createBufferSource();
-        src.buffer = smp.buffer;
-        src.loop = true; src.loopStart = smp.loopStart; src.loopEnd = smp.loopEnd;
-        src.detune.value = cents + (rnd() - 0.5) * 6;
-        const g = ctx.createGain(); g.gain.value = lv;
-        src.connect(g); g.connect(head);
-        src.start(t, k ? rnd() * 0.04 : 0);
-        src.stop(end + 1.0);
-        nodes.push(src);
-      });
+      const peak = vel * smp.gain * 0.85 * (SAMPLE_TRIM[o.voice] || 1);
+      const env = applyEnvelope(out.gain, t, dur, peak, ctx.currentTime);
+
+      // Camada única: a própria gravação já é um coro. Duas cópias desafinadas da mesma
+      // amostra "batem" entre si (efeito de tremolo), o que soava picotado.
+      // A nota começa no meio da amostra (pulando o ataque gravado), então ela nasce
+      // pelo envelope e não por um novo "ataque" a cada troca.
+      const src = ctx.createBufferSource();
+      src.buffer = smp.buffer;
+      src.loop = true; src.loopStart = smp.loopStart; src.loopEnd = smp.loopEnd;
+      src.detune.value = (rnd() - 0.5) * 4;
+      src.connect(head);
+      src.start(env.start, 0.25 + rnd() * 0.5);
+      src.stop(env.stopAt);
+      nodes.push(src);
       out.connect(this.voiceBus[o.voice] || this.voiceBus.S);
 
-      const peak = vel * smp.gain * 0.62 * (SAMPLE_TRIM[o.voice] || 1);
-      const att = Math.min(0.14, dur * 0.5);
-      out.gain.setValueAtTime(0, t);
-      out.gain.linearRampToValueAtTime(peak, t + att);
-      out.gain.setValueAtTime(peak, end);
-      out.gain.setTargetAtTime(0, end, 0.12);
-
-      const h = { out, nodes, end: end + 1.0 };
+      const h = { out, nodes, end: env.stopAt };
       this.active.add(h);
       nodes[0].onended = () => this.active.delete(h);
       return h;
@@ -442,20 +463,15 @@
       }
       out.connect(this.voiceBus[voice]);
 
-      // Envelope: ataque suave, sustentação, saída em fade
+      // Envelope com crossfade de potência constante
       const peak = vel * loudnessComp(voice, vowel, midi);
-      const att = Math.min(0.1, dur * 0.5);
-      const end = t + dur;
-      out.gain.setValueAtTime(0, t);
-      out.gain.linearRampToValueAtTime(peak, t + att);
-      out.gain.setValueAtTime(peak, end);
-      out.gain.setTargetAtTime(0, end, 0.08);
-      const stopAt = end + 0.8;
+      const env = applyEnvelope(out.gain, t, dur, peak, ctx.currentTime);
+      const stopAt = env.stopAt;
 
       const rndOffset = rnd() * 1.5;
       nodes.forEach((n) => {
-        if (n === nz) n.start(t, rndOffset);
-        else n.start(t);
+        if (n === nz) n.start(env.start, rndOffset);
+        else n.start(env.start);
         n.stop(stopAt);
       });
 
@@ -499,7 +515,7 @@
   }
 
   /* ───────────────────────── Transporte (Play/Pause/Stop) ─────────────────────────
-   * Agendador "lookahead": a cada 25 ms agenda as notas dos próximos ~150 ms.
+   * Agendador "lookahead": a cada 25 ms agenda as notas dos próximos ~250 ms.
    * Assim dá para editar, mudar o BPM e ligar/desligar o loop durante a reprodução.
    * Posições são medidas em "steps" (semicolcheias = 1/4 de tempo).
    */
@@ -607,7 +623,7 @@
         return;
       }
 
-      const target = this.p0 + (now + 0.15 - this.t0) / sps;
+      const target = this.p0 + (now + 0.25 - this.t0) / sps;
       let guard = 0;
       while (this.sp < target - 1e-9 && guard++ < 8) {
         const k = Math.floor(this.sp / L + 1e-9);

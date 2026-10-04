@@ -1,7 +1,7 @@
 // Coralcrafter – Service Worker
 // Todo o app é local (sem CDN), então funciona 100% offline depois da primeira visita.
 // Mude a versão abaixo para forçar a atualização do cache.
-const CACHE_NAME = 'coralcrafter-v4';
+const CACHE_NAME = 'coralcrafter-v5';
 
 const PRECACHE_URLS = [
   './',
