@@ -1,0 +1,17 @@
+{
+  "name": "coralcrafter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Coralcrafter - editor de partituras para coro (empacotado como APK com Capacitor)",
+  "scripts": {
+    "prepare-www": "node scripts/prepare-www.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.3",
+    "@capacitor/cli": "8.5.3",
+    "@capacitor/core": "8.5.3",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/share": "8.0.3",
+    "sharp": "0.35.5"
+  }
+}
