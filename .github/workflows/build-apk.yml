@@ -1,0 +1,128 @@
+name: Gerar APK assinado
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Versão que aparece para o usuário (ex.: 1.0.0)"
+        required: true
+        default: "1.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Conferir os 3 Secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          ok=1
+          for n in KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS; do
+            if [ -z "${!n}" ]; then echo "::error::O Secret $n não foi cadastrado (Settings > Secrets and variables > Actions)."; ok=0; fi
+          done
+          [ "$ok" = "1" ] || exit 1
+
+      - name: Instalar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Instalar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+
+      - name: Preparar o app (www)
+        env:
+          OWNER: ${{ github.repository_owner }}
+          APP_ID: ${{ vars.APP_ID }}
+        run: node scripts/prepare-www.mjs
+
+      - name: Criar projeto Android
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Ajustar versão, ícones e abertura
+        env:
+          VERSION_NAME: ${{ github.event.inputs.version_name }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: node scripts/patch-android.mjs
+
+      - name: Garantir o Android SDK pedido pelo projeto
+        run: |
+          API=$(grep -oP 'compileSdkVersion = \K[0-9]+' android/variables.gradle)
+          echo "compileSdk = $API"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null 2>&1 || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-$API" || true
+
+      - name: Compilar o APK (release)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Alinhar e assinar com a SUA chave
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          VERSION_NAME: ${{ github.event.inputs.version_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -e
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "build-tools: $BT"
+          echo "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > "$RUNNER_TEMP/release.keystore"
+          if ! keytool -list -keystore "$RUNNER_TEMP/release.keystore" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" > "$RUNNER_TEMP/ks.txt" 2>&1; then
+            echo "::error::Não consegui abrir a chave. Confira os Secrets KEYSTORE_BASE64, KEYSTORE_PASSWORD e KEY_ALIAS."
+            exit 1
+          fi
+          UNSIGNED=$(find android/app/build/outputs/apk/release -name '*.apk' | head -1)
+          echo "APK sem assinatura: $UNSIGNED"
+          OUT="Coralcrafter-v${VERSION_NAME}-b${RUN_NUMBER}.apk"
+          "$BT/zipalign" -p -f 4 "$UNSIGNED" "$RUNNER_TEMP/aligned.apk"
+          "$BT/apksigner" sign --ks "$RUNNER_TEMP/release.keystore" --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEYSTORE_PASSWORD \
+            --out "$OUT" "$RUNNER_TEMP/aligned.apk"
+          "$BT/apksigner" verify --verbose --print-certs "$OUT" | tee "$RUNNER_TEMP/verify.txt"
+          "$BT/aapt2" dump badging "$OUT" | grep -E "^package|application-label:" | tee "$RUNNER_TEMP/badging.txt" || true
+          echo "APK_FILE=$OUT" >> "$GITHUB_ENV"
+          {
+            echo "## APK assinado: $OUT"
+            echo ""
+            echo '```'
+            grep -E "Verifies|Number of signers|SHA-256|Signer #1 certificate DN" "$RUNNER_TEMP/verify.txt" || true
+            cat "$RUNNER_TEMP/badging.txt" || true
+            echo '```'
+            echo "Confira: o SHA-256 acima deve ser SEMPRE o mesmo em todas as versões (é a impressão digital da sua chave)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Guardar o APK nos artefatos
+        uses: actions/upload-artifact@v4
+        with:
+          name: Coralcrafter-APK
+          path: ${{ env.APK_FILE }}
+          retention-days: 30
+
+      - name: Publicar em Releases (link direto para baixar no celular)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION_NAME: ${{ github.event.inputs.version_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          gh release create "v${VERSION_NAME}-b${RUN_NUMBER}" "$APK_FILE" \
+            --title "Coralcrafter ${VERSION_NAME} (build ${RUN_NUMBER})" \
+            --notes "APK assinado. Baixe o arquivo .apk abaixo e instale no Android." \
+            --target "${GITHUB_SHA}"
